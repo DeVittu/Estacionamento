@@ -1,4 +1,4 @@
-import { MercadoPagoConfig, Preference } from "mercadopago";
+import { MercadoPagoConfig, Payment, Preference } from "mercadopago";
 
 interface CriarPreferenciaReservaParams {
   vagaId: number;
@@ -6,7 +6,7 @@ interface CriarPreferenciaReservaParams {
   nome: string;
 }
 
-function siteUrl() {
+export function siteUrl() {
   return (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
 }
 
@@ -26,6 +26,11 @@ function mercadoPagoClient() {
     accessToken,
     options: { timeout: 5000 },
   });
+}
+
+export async function consultarPagamento(paymentId: string | number) {
+  const payment = new Payment(mercadoPagoClient());
+  return payment.get({ id: paymentId });
 }
 
 export async function criarPreferenciaReserva({
@@ -59,6 +64,7 @@ export async function criarPreferenciaReserva({
         failure: `${baseUrl}/pagamento/falha?vaga=${vagaId}`,
         pending: `${baseUrl}/pagamento/pendente?${params.toString()}`,
       },
+      notification_url: `${baseUrl}/api/mercadopago/webhook`,
       statement_descriptor: "ESTACIONAMENTO",
     },
   });

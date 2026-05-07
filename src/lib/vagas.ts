@@ -24,6 +24,7 @@ export async function liberarReservasExpiradas(): Promise<void> {
       reservado_em: null,
       pagamento_status: null,
       mp_preference_id: null,
+      mp_payment_id: null,
     })
     .eq("reservada", true)
     .eq("usada", false)
@@ -96,6 +97,7 @@ export async function reservarVaga(
         reservado_em: new Date().toISOString(),
         pagamento_status: "pendente",
         mp_preference_id: null,
+        mp_payment_id: null,
       })
       .eq("id", vagaLivre.id)
       .eq("reservada", false)
@@ -127,6 +129,7 @@ export async function liberarVaga(vagaId: number): Promise<void> {
       reservado_em: null,
       pagamento_status: null,
       mp_preference_id: null,
+      mp_payment_id: null,
     })
     .eq("id", vagaId)
     .eq("usada", false);
@@ -149,13 +152,17 @@ export async function salvarPreferenciaPagamento(
 
 export async function confirmarPagamentoReserva(
   vagaId: number,
-  codigo: string
+  codigo: string,
+  paymentId?: string | number
 ): Promise<{ success: boolean; error?: string }> {
   await liberarReservasExpiradas();
 
   const { data, error } = await supabase
     .from("vagas")
-    .update({ pagamento_status: "pago" })
+    .update({
+      pagamento_status: "pago",
+      mp_payment_id: paymentId ? String(paymentId) : undefined,
+    })
     .eq("id", vagaId)
     .eq("codigo", codigo)
     .eq("reservada", true)
@@ -181,6 +188,22 @@ export async function confirmarPagamentoReserva(
   }
 
   return { success: true };
+}
+
+// ─── Confirmar pagamento via webhook Mercado Pago ────────────────────────────
+
+export async function confirmarPagamentoPorReferencia(
+  externalReference: string,
+  paymentId: string | number
+): Promise<{ success: boolean; error?: string }> {
+  const [vagaIdRaw, codigo] = externalReference.split(":");
+  const vagaId = Number(vagaIdRaw);
+
+  if (!vagaId || !codigo) {
+    return { success: false, error: "Referencia externa invalida." };
+  }
+
+  return confirmarPagamentoReserva(vagaId, codigo, paymentId);
 }
 
 // ─── Buscar reservas (para check-in) ─────────────────────────────────────────

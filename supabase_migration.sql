@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS vagas (
   usada    BOOLEAN  NOT NULL DEFAULT FALSE,
   reservado_em TIMESTAMPTZ,
   pagamento_status TEXT CHECK (pagamento_status IN ('pendente', 'pago', 'cancelado')),
-  mp_preference_id TEXT
+  mp_preference_id TEXT,
+  mp_payment_id TEXT
 );
 
 -- Para projetos existentes, adiciona as colunas novas sem apagar dados.
@@ -26,6 +27,9 @@ ALTER TABLE vagas
 
 ALTER TABLE vagas
   ADD COLUMN IF NOT EXISTS mp_preference_id TEXT;
+
+ALTER TABLE vagas
+  ADD COLUMN IF NOT EXISTS mp_payment_id TEXT;
 
 -- 2. Popular com 200 vagas (IDs 1 a 200)
 INSERT INTO vagas (id, reservada, nome, placa, codigo, usada)
@@ -66,7 +70,8 @@ CREATE POLICY "vagas_update_public"
 --     usada = FALSE,
 --     reservado_em = NULL,
 --     pagamento_status = NULL,
---     mp_preference_id = NULL
+--     mp_preference_id = NULL,
+--     mp_payment_id = NULL
 -- WHERE reservada = TRUE
 --   AND usada = FALSE
 --   AND (pagamento_status = 'pendente' OR pagamento_status IS NULL);

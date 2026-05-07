@@ -10,6 +10,7 @@ export interface Vaga {
   reservado_em?: string | null;
   pagamento_status?: "pendente" | "pago" | "cancelado" | null;
   mp_preference_id?: string | null;
+  mp_payment_id?: string | null;
 }
 
 export interface ReservaPayload {
